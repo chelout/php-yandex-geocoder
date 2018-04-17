@@ -1,0 +1,33 @@
+{
+    "name": "chelout/php-yandex-geocoder",
+    "description": "Yandex Geocoder",
+    "homepage": "https://github.com/chelout/php-yandex-geocoder",
+    "license": "MIT",
+    "keywords": [
+        "api",
+        "yandex",
+        "geo",
+        "geocode",
+        "geocoder",
+        "maps"
+    ],
+    "authors": [
+        {
+            "name": "Viacheslav Ostrovskiy",
+            "email": "chelout@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.0",
+        "guzzlehttp/guzzle": "^6.3",
+        "predis/predis": "^1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Chelout\\Geocoder\\": "src/"
+        }
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^3.4"
+    }
+}
