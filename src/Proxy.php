@@ -4,7 +4,6 @@ namespace Chelout\Geocoder;
 
 use GuzzleHttp\Client as GuzzleClient;
 use InvalidArgumentException;
-use Predis\Client as RedisClient;
 
 class Proxy
 {
@@ -69,19 +68,19 @@ class Proxy
     public $guzzle;
 
     /**
-     * @var \Predis\Client
+     * @var Cache
      */
-    public $redis;
+    public $cache;
 
     public function __construct()
     {
-        $this->redis = new RedisClient;
+        $this->cache = new Cache;
 
-        if (! $proxies = $this->getCache('proxies')) {
+        if (! $proxies = $this->cache->get('proxies:list')) {
             $proxies = $this
                 ->loadProxies();
 
-            $this->setCache('proxies', $proxies);
+            $this->cache->set('proxies:list', $proxies);
         }
 
         $this->proxies = $proxies;
@@ -116,22 +115,6 @@ class Proxy
         }
     }
 
-    protected function setCache($key, $value, $seconds = 3600)
-    {
-        $this->redis->set($key, json_encode($value), 'EX', $seconds);
-    }
-
-    protected function getCache($key)
-    {
-        $value = $this->redis->get($key);
-
-        if (! is_null($value)) {
-            return json_decode($value, true);
-        }
-
-        return false;
-    }
-
     public function get($key = null)
     {
         if (is_null($key)) {
@@ -162,7 +145,7 @@ class Proxy
         if ($key = array_search($value, $this->proxies)) {
             unset($this->proxies[$key]);
 
-            $this->setCache('proxies', $this->proxies);
+            $this->cache->set('proxies:list', $this->proxies);
         }
     }
 }

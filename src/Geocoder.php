@@ -88,6 +88,11 @@ class Geocoder
     protected $response;
 
     /**
+     * @var \Chelout\Geocoder\Cache
+     */
+    protected $cache;
+
+    /**
      * @var \Chelout\Geocoder\Proxy
      */
     protected $proxy;
@@ -105,6 +110,16 @@ class Geocoder
      */
     public function __construct(Proxy $proxy = null, Client $client = null)
     {
+        $this->cache = new Cache;
+        if (! $this->cache->exists('geocoder:succeeded')) {
+            $this->cache->set('geocoder:succeeded', 0);
+            $this->cache->expireat('geocoder:succeeded');
+        }
+        if (! $this->cache->exists('geocoder:counter')) {
+            $this->cache->set('geocoder:counter', 0);
+            $this->cache->expireat('geocoder:counter');
+        }
+
         $this->proxy = $proxy ?: new Proxy;
 
         $this->tries = $this->proxy->count();
@@ -123,23 +138,25 @@ class Geocoder
     {
         do {
             $proxy = $this->proxy->random();
+            $this->cache->incriment('geocoder:counter');
 
             try {
-                // dump($this->tries . ': ' . $proxy);
-
                 $response = $this->client->request('GET', '', [
                     'query' => $this->filters,
                     'proxy' => $proxy,
-                    // 'verify' => false,
+                    'verify' => false,
                 ]);
 
-                $this->response = new Response(
-                    json_decode((string) $response->getBody(), true)
-                );
+                if ($response->getBody()->getContents()) {
+                    $this->response = new Response(
+                        json_decode((string) $response->getBody(), true)
+                    );
 
-                dump($this->tries . ': ' . $proxy);
+                    dump($this->tries . ': ' . $proxy);
+                    $this->cache->incriment('geocoder:succeeded');
 
-                return $this;
+                    return $this;
+                }
             } catch (ClientException $e) {
                 // $this->proxy->remove($proxy);
 
