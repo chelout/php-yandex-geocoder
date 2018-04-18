@@ -107,7 +107,7 @@ class Geocoder
     /**
      * @param bool $proxy
      */
-    public function __construct(bool $proxy = false)
+    public function __construct(bool $proxy = null)
     {
         $this->cache = new Cache;
         if (! $this->cache->exists('geocoder:succeeded')) {
