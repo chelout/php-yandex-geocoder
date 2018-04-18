@@ -105,10 +105,9 @@ class Geocoder
     protected $tries = 10;
 
     /**
-     * @param null|\Chelout\Geocoder\Proxy $proxy
-     * @param null|\GuzzleHttp\Client      $client
+     * @param bool $proxy
      */
-    public function __construct(Proxy $proxy = null, Client $client = null)
+    public function __construct(bool $proxy = false)
     {
         $this->cache = new Cache;
         if (! $this->cache->exists('geocoder:succeeded')) {
@@ -120,13 +119,15 @@ class Geocoder
             $this->cache->expireat('geocoder:counter');
         }
 
-        $this->proxy = $proxy ?: new Proxy;
-
-        $this->tries = $this->proxy->count();
+        if ($proxy) {
+            $this->proxy = new Proxy;
+            $this->tries = $this->proxy->count();
+        } else {
+            $this->tries = 1;
+        }
 
         $this->client = $client ?: new Client([
             'base_uri' => 'https://geocode-maps.yandex.ru/1.x/',
-            // 'proxy' => ($proxy ?: new Proxy)->random(),
             'timeout' => 2.0,
             // 'http_errors' => false,
         ]);
@@ -137,7 +138,7 @@ class Geocoder
     public function load(array $options = [])
     {
         do {
-            $proxy = $this->proxy->random();
+            $proxy = $this->proxy ? $this->proxy->random() : null;
             $this->cache->incriment('geocoder:counter');
 
             try {
